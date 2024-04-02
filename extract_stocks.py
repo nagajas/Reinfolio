@@ -18,10 +18,13 @@ def download_dataset(driver, link):
         driver (selenium.webdriver): Driver element.
         link (url): URL for the stock's download page.
     """
-    driver.get(link+"/historical")
-    button = WebDriverWait(driver, 5).until(EC.visibility_of_element_located((By.XPATH,'/html/body/div[2]/div/main/div[2]/div[4]/div[3]/div/div[1]/div/div[1]/div[3]/div/div/div/button[6]')))
+    driver.get(link)
+    svg_element = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CSS_SELECTOR, "svg[data-icon='CoreArrowDown']")))
+    svg_element.click()
+    button = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, '//*[@id="dropdown-menu"]/div/ul[2]/li[4]/button')))
     button.click()
-    driver.find_element(By.XPATH,'/html/body/div[2]/div/main/div[2]/div[4]/div[3]/div/div[1]/div/div[1]/div[3]/button').click()
+    dwld_link = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, '//*[@id="Col1-1-HistoricalDataTable-Proxy"]/section/div[1]/div[2]/span[2]/a')))
+    driver.get(dwld_link.get_attribute('href'))
     # Wait 3 seconds for download to start
     sleep(3)
     
@@ -37,34 +40,23 @@ def main():
     options.add_experimental_option("prefs", {
     "profile.default_content_settings.popups": 0,
     "download.prompt_for_download": False,
-    "download.default_directory": r"~/Desktop/StockData", # This only works with downloadable links and doesn't work with buttons, set download location manually on browser.
+    "download.default_directory": r"~/Desktop/rl_trader_AI/data/", # This doesn't work with buttons, set download location manually on browser
     })
 
     driver = webdriver.Chrome(options=options)
     driver.set_window_size(width , height)
-    driver.get(BASE+"/market-activity/quotes/nasdaq-ndx-index")
+    driver.get("https://www.nasdaq.com/market-activity/quotes/nasdaq-ndx-index")    
 
     stocks = driver.find_elements(By.XPATH,'/html/body/div[2]/div/main/div[2]/article/div[2]/div/div[3]/div[3]/div[2]/table/tbody/tr/th[1]/a')
-    stock_links = dict()
+    stock_tickers=[]
     for stock in stocks:
-        #print(stock.text)
-        stock_links[stock.text] = stock.get_attribute('href')
+        stock_tickers.append(stock.text)
         
-    for link in tqdm(list(stock_links.values())):
-        download_dataset(driver, link)
+    for ticker in tqdm(stock_tickers):
+        link = "https://finance.yahoo.com/quote/"+ticker+"/history"
+        download_dataset(link)
         
     driver.quit()
-    
-    # Renaming the files to their respective ticker symbols.
-    directory = 'DATA_10y/'
-    files = os.listdir(directory)
-    files.sort(key=lambda x: os.path.getmtime(os.path.join(directory, x)))
-    
-    for file, stock in zip(files[1:], stock_links.keys()):
-        if file != ".DS_Store":
-            old_path = os.path.join(directory, file)
-            new_path = os.path.join(directory, stock + ".csv")
-            os.rename(old_path, new_path)
 
 if __name__ == "__main__":
     main()
