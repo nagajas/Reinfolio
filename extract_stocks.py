@@ -10,17 +10,18 @@ from time import sleep, time
 from tqdm import tqdm
 import os
     
-def download_dataset(driver, link):
-    # 
-    """Click button labelled "MAX" to get 10 years of data. Then click the download button.
+def download_dataset(driver, link)-> None:
+    """Click button labelled "MAX" to get all historical data. Then click the download button.
 
     Args:
         driver (selenium.webdriver): Driver element.
         link (url): URL for the stock's download page.
     """
     driver.get(link)
+    # Opening the dropdown menu via svg
     svg_element = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CSS_SELECTOR, "svg[data-icon='CoreArrowDown']")))
     svg_element.click()
+    # Seletin max option to get download link
     button = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, '//*[@id="dropdown-menu"]/div/ul[2]/li[4]/button')))
     button.click()
     dwld_link = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, '//*[@id="Col1-1-HistoricalDataTable-Proxy"]/section/div[1]/div[2]/span[2]/a')))
