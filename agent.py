@@ -12,18 +12,19 @@ from keras.layers import Dense, LSTM, Input, Activation
 from keras.optimizers import Adam
 from sklearn.metrics import mean_squared_error
 
+from utilities import *
 
 class TradeAgent:
-    def __init__(self, ticker, lookback = 30, features = 8):
+    def __init__(self, ticker, lookback = 30, features = 9):
         self.lookback = lookback
         self.features = features
         self.input_shape  = (lookback, features)
-        self.action_size = 1 #predict close difference
+        self.action_size = 1 #predict scaled close difference
         self.stock = ticker
         
         self.model_exists = False
         if("model_" + ticker + "_" + str(lookback) + "lb.keras" in os.listdir('models')):
-            filename = 'models/'+ticker+'_'+str(lookback)+"lb.keras"
+            filename = "models/model_"+ticker+"_"+str(lookback)+"lb.keras"
             self.model = load_model(filename)
             self.model_exists = True
         else:
@@ -56,14 +57,9 @@ class TradeAgent:
                         epochs = epochs, 
                         shuffle = True,
                         validation_split = 0.1)
-            self.model_exists = True
             print("----------------------------------------------------------------Model Trained----------------------------------------------------------------")
         else:
             print("Model already trained.")
-        
-        
-    def act(self, Y_test):
-        return self.model.predict(Y_test)
     
     def evaluate(self, graph = True):
         if not self.model_exists:
@@ -80,14 +76,21 @@ class TradeAgent:
             plt.figure(figsize=(16,8))
             plt.plot(self.Y_test, color = 'black', label = 'Test')
             plt.plot(y_pred, color = 'blue', label = 'pred')
+            plt.title('Stock Price Trend for '+ self.stock)
+            plt.xlabel('# of Test Days')
+            plt.ylabel('Scaled Price Change Value')
             plt.legend()
             plt.show()
         return mse
     
     def save_model(self):
-        filename = "models/model_" + self.stock + "_" + str(self.lookback) + "lb.keras"
-        self.model.save(filename)
-        print("Model saved successfully at", filename)
+        if(not self.model_exists):
+            filename = "models/model_" + self.stock + "_" + str(self.lookback) + "lb.keras"
+            self.model.save(filename)
+            print("Model saved successfully at", filename)
+            self.model_exists = True
+
+                
 
 
 class DQNAgent:
@@ -95,7 +98,7 @@ class DQNAgent:
     def __init__(self, num_stocks):
         self.state_size = (num_stocks, 1)
         self.action_size = 3 #buy, sell, sit
-        self.replay_buffer = deque(maxlen = 5000) 
+        self.replay_buffer = deque(maxlen = 50) 
         self.inventory = []
         
         self.gamma = 0.9 # discount rate
@@ -138,7 +141,7 @@ class DQNAgent:
             else:
                 target_Q = reward
             
-            Q_values = self.model.predict(state)
+            Q_values = self.model.predict(state, verbose = 0)
 
             for i in range(self.action_size):
                 Q_values[i][0][actions[i]] = target_Q[i]
