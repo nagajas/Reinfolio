@@ -2,17 +2,15 @@ import pandas as pd
 import pandas_ta as ta
 import numpy as np
 from tqdm import tqdm
-from agent import *
 from sklearn.preprocessing import MinMaxScaler
 from collections import OrderedDict
 
 from keras.models import load_model
 import os
 import re
-# from agent import *
+from agent import *
 
-
-def preprocess(stock, lookback = 30, features = 8, split_by = 'ratio', split = '0.8'):
+def preprocess(stock, lookback = 30, features = 9, split_by = 'ratio', split = '0.8'):
         # Opening stock csv file
         file = 'data/'+stock+'.csv'
         df = pd.read_csv(file)
@@ -61,7 +59,7 @@ def preprocess(stock, lookback = 30, features = 8, split_by = 'ratio', split = '
         # Scaling the df
         scaler = MinMaxScaler(feature_range=(0, 1))
         train_data = scaler.fit_transform(train_df.values)
-        test_data = scaler.transform(test_df.values)
+        test_data = scaler.fit_transform(test_df.values)
 
         # Prepare final data
         X_train, X_test = [], []
@@ -99,7 +97,7 @@ def generate_models(stocks):
     
         if not exists:
             print("Creating model for ", stock)
-            agent = TradeAgent(stock)
+            agent = TradeAgent(stock) #This warning can be ignored as this prevents circular import 
             agent.train(32, 30)
             agent.save_model()
             new_models = os.listdir('models')
@@ -114,10 +112,10 @@ def generate_models(stocks):
 def dict2vec(odict):
     return np.array(list(odict.values()))[:,:]
 
-def allStates(min_len, stocks = ['AAPL', 'GOOGL', 'AMZN', 'ADBE'], mode = 'train'):
+def allStates(min_len, stocks = ['AAPL', 'GOOGL', 'AMZN', 'ADBE'], split_ratio = 0.8):
     mdls = generate_models(stocks)
     for stock in stocks:
-        _, __ , x_test, ___ = preprocess(stock, 30, 8)
+        _, __ , x_test, ___ = preprocess(stock, 30, 9)
         min_len = min(min_len, len(x_test))
 
     stock_data = OrderedDict()
@@ -126,8 +124,8 @@ def allStates(min_len, stocks = ['AAPL', 'GOOGL', 'AMZN', 'ADBE'], mode = 'train
 
     for stock in stocks:
         df = pd.read_csv('data/'+stock+'.csv')['Adj Close'].values[-min_len:] #last min_len elements
-        _, __, x_test, y_test = preprocess(stock, 30, 8)
-        split =int(0.8*min_len)
+        _, __, x_test, y_test = preprocess(stock, 30, 9)
+        split =int(split_ratio * min_len)
         
         x_test = x_test[-min_len+1:]
         y_test = y_test[-min_len:]
@@ -138,7 +136,7 @@ def allStates(min_len, stocks = ['AAPL', 'GOOGL', 'AMZN', 'ADBE'], mode = 'train
         true_data[stock] = df
         # print(len(stock_data[stock][0]), len(stock_data[stock][1]), len(stock_data[stock][2]), len(stock_data[stock][3]) )
         # print(len(true_data[stock][0]), len(true_data[stock][1]))
-        
+
         model_index = stocks.index(stock)
         model = mdls[model_index]
         predictions = model.predict(x_test)
