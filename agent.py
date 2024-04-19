@@ -61,28 +61,31 @@ class TradeAgent:
         else:
             print("Model already trained.")
     
-    def evaluate(self, graph = True):
+    def evaluate(self, test_size = 0, graph = True):
         if not self.model_exists:
             print("Model doesn't exist or is not trained.")
             return None
         if(self.X_test is None):
             _, __, self.X_test, self.Y_test = preprocess(self.stock)
-        y_pred = self.model.predict(self.X_test)
-        mse = mean_squared_error(self.Y_test, y_pred)
-        print("Test size: ", self.X_test.shape[0])
+        X_test, Y_test = self.X_test, self.Y_test
+        if(test_size != 0):
+            X_test = self.X_test[-test_size:]
+            Y_test = self.Y_test[-test_size:]
+        y_pred = self.model.predict(X_test)
+        mse = mean_squared_error(Y_test, y_pred)
+        print("Test size: ", X_test.shape[0])
         print("Mean Squared Error: ", mse)
-        
         if(graph):
-            plt.figure(figsize=(16,8))
-            plt.plot(self.Y_test, color = 'black', label = 'Test')
+            plt.figure(figsize=(10,6))
+            plt.plot(Y_test, color = 'black', label = 'Test')
             plt.plot(y_pred, color = 'blue', label = 'pred')
             plt.title('Stock Price Trend for '+ self.stock)
             plt.xlabel('# of Test Days')
             plt.ylabel('Scaled Price Change Value')
             plt.legend()
             plt.show()
-        return mse
-    
+        print("Mean Squared Error: {}".format(mse))
+            
     def save_model(self):
         if(not self.model_exists):
             filename = "models/model_" + self.stock + "_" + str(self.lookback) + "lb.keras"
@@ -102,8 +105,8 @@ class DQNAgent:
         self.inventory = []
         
         self.gamma = 0.9 # discount rate
-        self.epsilon = 0.8
-        self.epsilon_threshold = 0.01
+        self.epsilon = 1.0
+        self.epsilon_threshold = 0.8
         self.epsilon_decay = 0.995
         
         self.model = self._model()
@@ -112,7 +115,7 @@ class DQNAgent:
         input_layer = Input(self.state_size)
         dense1 = Dense(64, activation = 'relu')(input_layer)
         dense2 = Dense(32, activation = 'relu')(dense1)
-        output = Dense(self.action_size, activation = 'softmax')(dense2)
+        output = Dense(self.action_size, activation = 'linear')(dense2)
         model = Model(inputs = input_layer, outputs = output)
         model.compile(optimizer = Adam(), loss = 'mse')
         model.summary()
@@ -121,8 +124,8 @@ class DQNAgent:
     def store_transition(self, state, action, reward, next_state, done):
         self.replay_buffer.append((state, action, reward, next_state, done))
         
-    def epsilon_greedy(self, state):
-        if np.random.rand() <= self.epsilon:
+    def epsilon_greedy(self, state, eval = False):
+        if not eval and np.random.rand() <= self.epsilon:
             return np.array([random.randrange(self.action_size) for _ in range(self.state_size[0])])
         
         prediction = self.model.predict(state, verbose = 0)
@@ -137,18 +140,19 @@ class DQNAgent:
         
         for state, actions, reward, next_state, done in mini_batch:
             if not done:
-                target_Q = (reward + self.gamma * np.amax(self.model.predict(next_state, verbose = 0)))
+                expect_q = self.model.predict(next_state, verbose = 0)
+                target_Q = (reward + self.gamma * np.amax(expect_q, axis = 2))
             else:
                 target_Q = reward
             
             Q_values = self.model.predict(state, verbose = 0)
 
             for i in range(self.action_size):
-                Q_values[i][0][actions[i]] = target_Q[i]
+                Q_values[i, 0, actions[i]] = target_Q[i, 0]
             
             self.model.fit(state, Q_values, epochs = 1, verbose = 0)
             
-        if(self.epsilon < self.epsilon_threshold):
+        if(self.epsilon > self.epsilon_threshold):
             self.epsilon *= self.epsilon_decay
                 
                 
