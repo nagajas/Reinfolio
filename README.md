@@ -17,7 +17,7 @@ The notebooks provide interactive code for understanding the processes.
 
 AAPL Stock Prediction:
 
-![AAPL Stock Prediction](images/AAPL.jpeg)
+![AAPL Stock Prediction](images/AAPL.png)
 
 ### Q-Learning:
 
