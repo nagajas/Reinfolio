@@ -106,7 +106,7 @@ class DQNAgent:
         
         self.gamma = 0.9 # discount rate
         self.epsilon = 1.0
-        self.epsilon_threshold = 0.8
+        self.epsilon_threshold = 0.01
         self.epsilon_decay = 0.995
         
         self.model = self._model()
@@ -129,6 +129,9 @@ class DQNAgent:
             return np.array([random.randrange(self.action_size) for _ in range(self.state_size[0])])
         
         prediction = self.model.predict(state, verbose = 0)
+        for i, li in zip(range(4), self.inventory.values()):
+            if(len(li)== 0):
+                prediction[i,0,2] = 0 # if not already bought, dont expect selling reward
         return np.array([np.argmax(prediction[i]) for i in range(len(prediction))])
     
     def exp_replay(self, batch_size):
