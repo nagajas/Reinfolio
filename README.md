@@ -15,12 +15,12 @@ The notebooks provide interactive code for understanding the processes.
 
 ##### Stock Prediction Model:
 
-AAPL Stock Prediction:
+AAPL Stock Prediction using LSTM:
 
 ![AAPL Stock Prediction](images/AAPL.png)
 
 ### Q-Learning:
 
-For Q-learning using stocks : AAPL, AMZN, ADBE, GOOGL
+Portfolio built using stocks : AAPL, AMZN, ADBE, GOOGL via Q Learning. 
 
-![For Q-learning using stocks : AAPL, AMZN, ADBE, GOOGL](images/QPred_1day.png)
+![For Q-learning using stocks : AAPL, AMZN, ADBE, GOOGL](images/QPred_926days.png)
