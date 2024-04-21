@@ -27,5 +27,7 @@ Portfolio built using stocks : AAPL, AMZN, ADBE, GOOGL via Q Learning.
 
 ### References:
 [Q-Trader for skeleton training and evaluation skeleton code](https://github.com/edwardhdlu/q-trader)
+
 [deep-q-learning for agent skeleton code](https://github.com/keon/deep-q-learning/blob/master/dqn.py)
+
 [Code Trading's YouTube channel for LSTM idea](https://www.youtube.com/@codetradingcafe)
