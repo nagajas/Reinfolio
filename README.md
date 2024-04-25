@@ -23,7 +23,7 @@ AAPL Stock Prediction using LSTM:
 
 Portfolio built using stocks : AAPL, AMZN, ADBE, GOOGL via Q Learning. 
 
-![For Q-learning using stocks : AAPL, AMZN, ADBE, GOOGL](images/QPred_926days.png)
+![For Q-learning using stocks : AAPL, AMZN, ADBE, GOOGL](images/QPred_926days_AAPL_ADBE_AMZN_GOOGL.png)
 
 ### References:
 [Q-Trader for skeleton training and evaluation skeleton code](https://github.com/edwardhdlu/q-trader)
