@@ -11,7 +11,6 @@ The project contains two reinforcement frameworks:
 
 The notebooks provide self explanatory code for understanding the processes. The predictions of the LSTM network are for 1 day in future, which are predicted using the models if available, else they are trained with default lookback period of 30 days. This is explained in [trade_agent.ipynb](trade_agent.ipynb) file. The Q learning module implemented in [portfolio_opt.ipynb](portfolio_opt.ipynb) uses DQNAgent from [agent module](agent.py), to give investment scenario for a set of stocks for 1 day in future based on the LSTM model's prediction.
 
-This is an academic project. Real-time trading based on this project is not encouraged.
 
 ### Sample Results:
 
@@ -33,3 +32,8 @@ Portfolio built using stocks : AAPL, AMZN, ADBE, GOOGL via Q Learning.
 [deep-q-learning for agent skeleton code](https://github.com/keon/deep-q-learning/blob/master/dqn.py)
 
 [Code Trading's YouTube channel for LSTM idea](https://www.youtube.com/@codetradingcafe)
+
+
+
+### Disclaimer:
+This is an academic project. Real-time trading based on this project is not encouraged.
