@@ -1,4 +1,5 @@
 import pandas as pd
+import yfinance as yf
 import pandas_ta as ta
 import numpy as np
 from tqdm import tqdm
@@ -12,10 +13,10 @@ from agent import *
 
 def preprocess(stock, lookback = 30, features = 9, split_by = 'ratio', split = '0.8'):
         # Opening stock csv file
-        file = 'data/'+stock+'.csv'
-        df = pd.read_csv(file)
-        df['Date'] = pd.to_datetime(df['Date'])
-        df.set_index('Date', inplace = True)
+        file = yf.Ticker(stock)
+        df = file.history(period = "max")
+        #df['Date'] = pd.to_datetime(df['Date'])
+        #df.set_index('Date', inplace = True)
         
         # Add indicators
         df['RSI'] = ta.rsi(df.Close, length=15)
@@ -30,11 +31,11 @@ def preprocess(stock, lookback = 30, features = 9, split_by = 'ratio', split = '
         # df['Day_of_Month'] = df['Day_of_Month'].astype(np.float64)
         
         #Add heavy indicators to force outcome
-        df['Tgt'] = (df['Adj Close'] - df['Open']).shift(-1)
+        df['Tgt'] = (df['Close'] - df['Open']).shift(-1)
         df['Tgt_Class'] = (df['Tgt'] > 0).astype(int)
         
         #Add output labels
-        df['Tgt_Close'] = df['Adj Close'].shift(-1)
+        df['Tgt_Close'] = df['Close'].shift(-1)
 
         df.dropna(inplace=True)
         df.reset_index(inplace=True)
@@ -48,11 +49,11 @@ def preprocess(stock, lookback = 30, features = 9, split_by = 'ratio', split = '
         test_df = df.iloc[split_at:].copy()
         
         #Drop unnecessary columns
-        train_df.drop(['Volume', 'Adj Close', 'Date'], 
+        train_df.drop(['Volume', 'Close', 'Date'], 
                       axis=1, 
                       inplace=True)
         
-        test_df.drop(['Volume', 'Adj Close', 'Date'], 
+        test_df.drop(['Volume', 'Close', 'Date'], 
                      axis=1,
                      inplace=True)
 
@@ -123,7 +124,9 @@ def allStates(min_len, stocks = ['AAPL', 'GOOGL', 'AMZN', 'ADBE'], split_ratio =
     differences = OrderedDict()
 
     for stock in stocks:
-        df = pd.read_csv('data/'+stock+'.csv')['Adj Close'].values[-min_len:] #last min_len elements
+        file = yf.Ticker(stock)
+        df = file.history(period = 'max')
+        df = df['Close'].values[-min_len:] #last min_len elements
         _, __, x_test, y_test = preprocess(stock, 30, 9)
         split =int(split_ratio * min_len)
         
